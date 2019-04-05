@@ -11,50 +11,75 @@ GPIO.setup(20, GPIO.OUT)
 GPIO.setup(19, GPIO.OUT)
 GPIO.setup(16, GPIO.OUT)
 
-
-#Define the output pins
-my_pwmForwards=GPIO.PWM(26,100)
-my_pwmBackwards=GPIO.PWM(20,100)
-my_pwmRight=GPIO.PWM(16,20)
-my_pwmLeft=GPIO.PWM(19,20)
+#Define the output pins and PWM frequency
+pwmForwards=GPIO.PWM(26,100)
+pwmBackwards=GPIO.PWM(20,100)
+pwmRight=GPIO.PWM(16,1)
+pwmLeft=GPIO.PWM(19,1)
 
 #Start the PWM process with 0 duty cycle
-my_pwmRight.start(0)
-my_pwmLeft.start(0)
-my_pwmForwards.start(0)
-my_pwmBackwards.start(0)
+pwmRight.start(0)
+pwmLeft.start(0)
+pwmForwards.start(0)
+pwmBackwards.start(0)
 
 # Motor functions:
-
 def moveForwards(): #Move the main drive motor forwards
-        my_pwmForwards.ChangeDutyCycle(35)
+        pwmForwards.ChangeDutyCycle(50)
+        print"Move forwards"
         sleep(5)
-        my_pwmForwards.ChangeDutyCycle(0)
-
+        pwmForwards.ChangeDutyCycle(0)
 def moveBackwards(): #Move the main drive motor backwards
-        my_pwmBackwards.ChangeDutyCycle(35)
+        pwmBackwards.ChangeDutyCycle(50)
+        print"Move backwards"
         sleep(5)
-        my_pwmBackwards.ChangeDutyCycle(0)
-
+        pwmBackwards.ChangeDutyCycle(0)
 def moveRight(): #Move the turning motor right
-        my_pwmRight.ChangeDutyCycle(15)
+        pwmRight.ChangeDutyCycle(15)
+        print"Move right"
         sleep(1)
-        my_pwmRight.ChangeDutyCycle(0)
-
-
+        pwmRight.ChangeDutyCycle(0)
 def moveLeft(): #Move the turning motor left
-        my_pwmLeft.ChangeDutyCycle(15)
+        pwmLeft.ChangeDutyCycle(15)
+        print"Move left"
         sleep(1)
-        my_pwmLeft.ChangeDutyCycle(0)
-
+        pwmLeft.ChangeDutyCycle(0)
+def driveRight(): #Drive forwards and turn right
+        pwmForwards.ChangeDutyCycle(40)
+        pwmRight.ChangeDutyCycle(15)
+        sleep(1)
+        pwmForwards.ChangeDutyCycle(0)
+        pwmRight.ChangeDutyCycle(0)
+def driveLeft(): #Drive forwards and turn left
+        pwmForwards.ChangeDutyCycle(40)
+        pwmLeft.ChangeDutyCycle(15)
+        sleep(1)
+        pwmForwards.ChangeDutyCycle(0)
+        pwmLeft.ChangeDutyCycle(0)
+def STOP(): #Gracefully exit the program
+        GPIO.cleanup()
+        quit()
 
 #Begin the program:
-moveRight()
-moveForwards()
-sleep(1)
-moveBackwards()
-moveLeft()
+
+while(1):
+        #Define shortcuts
+        R = moveRight
+        L = moveLeft
+        F = moveForwards
+        B = moveBackwards
+        S = STOP
+        #Run program
+        run = input('What would you like to do? ')
+        run()
+
+#Demo controls (obsolete, for reference only)
+#moveRight()
+#moveForwards()
+#sleep(1)
+#moveBackwards()
+#moveLeft()
+#sleep(1)
 
 #Clean up the GPIO pins to avoid errors on next run:
-
 GPIO.cleanup()
