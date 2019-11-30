@@ -4,49 +4,53 @@ from time import sleep
 import RPi.GPIO as GPIO
 
 #Set the GPIO pin configurations
-GPIO.setmode(GPIO.BCM)
+GPIO.setmode(GPIO.BCM) #Use the BCM PIN numbering scheme
 GPIO.setup(26, GPIO.OUT)
 GPIO.setup(20, GPIO.OUT)
 GPIO.setup(17, GPIO.OUT)
+GPIO.setup(27, GPIO.OUT) #Drive Lights
 
 #Define the output pins and PWM frequency
 pwmForwards=GPIO.PWM(26,100)
 pwmBackwards=GPIO.PWM(20,100)
 pwmTurn=GPIO.PWM(17,50)
 
-#Set up the system
-#Start the PWM process and set the Duty Cycle
-pwmForwards.start(0)
-pwmBackwards.start(0)
-pwmTurn.start(6.9) #Centre the wheels on system start
-sleep(0.5)
-pwmTurn.ChangeDutyCycle(0)
+#Set up the global variables
 steerState = "centre"
-print"The system is active and awaiting input"
+print "Steering is centered"
+gearState = "neutral"
+print"Gear is neutral"
 
-# Motor functions:
+# Define functions:
+def sysStart(): #System startup process
+        pwmForwards.start(0)
+        pwmBackwards.start(0)
+        pwmTurn.start(6.9)
+        GPIO.output(27,1)
+        sleep(0.2)
+        GPIO.output(27,0)
+        sleep(0.3)
+        GPIO.output(27,1)
+        pwmTurn.ChangeDutyCycle(0)
+        print"The system is active and awaiting input"
 def moveForwards(): #Move the main drive motor forwards
         pwmForwards.ChangeDutyCycle(55)
-        print"Moving forwards"
+def moveForwards2(): #Move the main drive motor forwards quicker
+        pwmForwards.ChangeDutyCycle(75)
 def moveBackwards(): #Move the main drive motor backwards
         pwmBackwards.ChangeDutyCycle(35)
-        print"Moving backwards"
-def allStop(): #Stop the drive motor
+def allStop(): #Stop the main drive motor
         pwmForwards.ChangeDutyCycle(0)
         pwmBackwards.ChangeDutyCycle(0)
-        print"All stop"
-def wheelStraight(): #Straighten the steering
+def wheelStraight(): #Centre the steering
         pwmTurn.ChangeDutyCycle(7)
         sleep(0.3)
         pwmTurn.ChangeDutyCycle(0)
-        print"Wheels straight"
 def moveRight(): #Turn the wheel to the right
-        print"Move right"
         pwmTurn.ChangeDutyCycle(2)
         sleep(0.3)
         pwmTurn.ChangeDutyCycle(0)
 def moveLeft(): #Turn the wheel to the left
-        print"Move left"
         pwmTurn.ChangeDutyCycle(11)
         sleep(0.3)
         pwmTurn.ChangeDutyCycle(0)
@@ -64,47 +68,74 @@ def getch(): #Reads user iput over SSH session
         finally:
                 termios.tcsetattr(fd,termios.TCSADRAIN, old_settings)
         return ch
+
+def gearing(gear):
+        global gearState
+        if(gear == "gear1"):
+                if(gearState == "neutral"):
+                        moveForwards()
+                        gearState = "gear1"
+                        print"gear 1"
+                elif(gearState == "gear-1"):
+                        allStop()
+                        gearState = "neutral"
+                        print"neutral"
+        if(gear == "gear-1"):
+                if(gearState == "neutral"):
+                        moveBackwards()
+                        gearState = "gear-1"
+                        print"gear -1"
+                elif(gearState == "gear1"):
+                        allStop()
+                        gearState = "neutral"
+                        print"neutral"
+#       if(gear == "gear2"):
+#               if(gearState == "gear-1"):
+#                       moveForwards()
+#                       print"gear 1"
+#       if(gear == "gear-1"):
+#               if(gearState == "gear1"):
+#                       allStop()
+#                       gearState = "neutral"
+#                       print"neutral"
+
+
 def steering(direction):
         global steerState
         if(direction == "right"):
                 if(steerState == "centre"):
-                        moveRight
+                        moveRight()
                         steerState = "right"
-                        print"steerState"
+                        print"right"
                 elif(steerState == "left"):
-                        wheelStraight
+                        wheelStraight()
                         steerState = "centre"
-                        print"steerState"
+                        print"centre"
         if(direction == "left"):
                 if(steerState == "centre"):
-                        moveLeft
+                        moveLeft()
                         steerState = "left"
-                        print"steerState"
+                        print"left"
                 elif(steerState == "right"):
-                        wheelStraight
+                        wheelStraight()
                         steerState = "centre"
-                        print"steerState"
+                        print"centre"
 
+sysStart()
 while(1):
         #Define shortcuts
-        R = moveRight
-        L = moveLeft
-        F = moveForwards
-        B = moveBackwards
-        S = wheelStraight
-        Q = allStop
         char = getch()
         if(char == "I"):
-                F
+                gearing("gear1")
         if(char == "K"):
-                Q
+                gearing("gear-1")
         if(char == "J"):
                 steering("left")
         if(char == "L"):
                 steering("right")
         if(char == "X"):
-                STOP
-        Q
+                allStop()
+                STOP()
 
 #Run program
         #run = input('What would you like to do? ')
@@ -113,4 +144,3 @@ while(1):
 
 #Clean up the GPIO pins to avoid errors on next run:
 GPIO.cleanup()
-
